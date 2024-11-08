@@ -27,15 +27,16 @@ void test_gdl_90_parse_message()
 {
     parser_status status = {0};
     int raw_message_size = 11;
-    // crc = 20698
-    uint8_t raw_message[11] = {0x7E, 0x00, 0x81, 0x41, 0xDB, 0xD0, 0x08, 0x02, 0xB3, 0x8B, 0x7E};
+    uint8_t raw_message[11] = {0x7E, 0x00, 0x81, 0x41, 0xDB, 0xD0, 0x08, 0x02, 0xB3, 0x8B, 0x7E, 0x00};
+
+    // Simulate bytes incoming from GDL90 uart connection
     for (size_t i = 0; i < raw_message_size; i++)
     {
         gdl_90_parse(raw_message[i], &status);
         usleep(1000);
         TEST_ASSERT_EQUAL(status.status, PROCESSING);
     }
-
+    
     sleep(1);
     TEST_ASSERT_EQUAL(status.status, PROCESSING);
 }

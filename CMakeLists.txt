@@ -35,10 +35,24 @@ target_include_directories(test_gdl_90_parser PRIVATE
 target_link_libraries(test_gdl_90_parser
     ${PROJECT_NAME}_lib
     ${unity_BINARY_DIR}/libunity.a
-
-    # gtest
-    # gtest_main
 )
 
+# Run all tests - ctest -j14 -C Debug -T test --output-on-failure
 # ctest -j14 -C Debug -T test --output-on-failure -R ^test_gdl_90_parser
 add_test(test_gdl_90_parser test_gdl_90_parser)
+
+# Tests 2
+add_executable(test_gdl_90_parser_heartbeat_message
+    tests/test_gdl_90_parser_heartbeat_message.c
+)
+
+target_include_directories(test_gdl_90_parser_heartbeat_message PRIVATE
+    include
+    src/
+    ${unity_SOURCE_DIR}/src
+)
+target_link_libraries(test_gdl_90_parser_heartbeat_message
+    ${PROJECT_NAME}_lib
+    ${unity_BINARY_DIR}/libunity.a
+)
+add_test(test_gdl_90_parser_heartbeat_message test_gdl_90_parser_heartbeat_message)

@@ -3,12 +3,14 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <sys/types.h>
+
 typedef enum message_types
 {
     HEARTBEAT,
     UNKNOW
 
 } MESSAGE_TYPES;
+
 typedef enum processing_status
 {
     PROCESSING,
@@ -18,6 +20,7 @@ typedef enum processing_status
 typedef struct
 {
     STATUS status;
+    MESSAGE_TYPES message_ready_type;
 } parser_status;
 
 // Size of the memory-mapped region
@@ -43,6 +46,7 @@ typedef struct
     uint8_t data[MMAP_SIZE - sizeof(pthread_mutex_t) - sizeof(pthread_cond_t)]; // Make sure we're not overflowing memory-mapped region
     int data_ready;
     int message_ready;
+    MESSAGE_TYPES message_type;
     int index;
 } shared_data_t;
 

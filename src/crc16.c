@@ -2,6 +2,7 @@
 
 #include "crc16.h"
 
+/// @brief Unused, I opted the GDL90 CRC from documentation
 static const uint16_t ccitt_hash[] = {
     0x0000,
     0x1021,

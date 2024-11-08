@@ -1,4 +1,5 @@
 #include "air_sample_task.h"
+#include "gdl90_heartbeat.h"
 #include <sys/mman.h>
 #include <pthread.h>
 #include <unistd.h>
@@ -11,7 +12,7 @@ int keep_running = 1;
 int message_parser_still_running = 1;
 
 // Function to perform GDL 90 byte unstuffing
-void gdl_90_byte_unstuff(const uint8_t *input, size_t input_len, uint8_t *output, size_t *output_len)
+void gdl90_byte_unstuff(const uint8_t *input, size_t input_len, uint8_t *output, size_t *output_len)
 {
     size_t out_idx = 0;
     size_t i = 0;
@@ -35,14 +36,12 @@ void gdl_90_byte_unstuff(const uint8_t *input, size_t input_len, uint8_t *output
                     output[out_idx++] = 0x7F;
                     break;
                 default:
-                    // Error handling for unexpected escape sequence
                     fprintf(stderr, "Unexpected escape sequence: 0x%02X\n", input[i]);
                     exit(EXIT_FAILURE);
                 }
             }
             else
             {
-                // Error handling for incomplete escape sequence
                 fprintf(stderr, "Incomplete escape sequence at end of input\n");
                 exit(EXIT_FAILURE);
             }
@@ -58,7 +57,7 @@ void gdl_90_byte_unstuff(const uint8_t *input, size_t input_len, uint8_t *output
     *output_len = out_idx;
 }
 
-MESSAGE_TYPES gdl_parse_to_message(uint8_t *buffer_without_flags, int buffer_size)
+void gdl90_parse_to_message(shared_data_t *shared_data, uint8_t *message_buffer, int message_size)
 {
     /*
     2.2.2. Message ID
@@ -69,7 +68,28 @@ MESSAGE_TYPES gdl_parse_to_message(uint8_t *buffer_without_flags, int buffer_siz
     with a range of 0-127 (decimal). Any messages that have a Message ID outside of this range
     should be discarded.
     */
-    return UNKNOW;
+    uint8_t id = message_buffer[0];
+    switch (id)
+    {
+    case HEARTBEAT:
+        printf("Got a heart bit message - processing...\n");
+        gdl90_heartbeat hb_message = parse_heartbeat_message(message_buffer, 0);
+        if (hb_message.id == UNKNOWN_MESSAGE)
+        {
+            printf("Failed parsing HEARTBEAT message!\n");
+        }
+        else
+        {
+            shared_data->message_ready = 1;
+            shared_data->message_type = HEARTBEAT;
+            // memcpy(shared_data->data, &hb_message, sizeof(gdl90_heartbeat));
+        }
+
+        break;
+
+    default:
+        break;
+    }
 }
 
 void *message_parser_t(void *arg)
@@ -152,7 +172,7 @@ void *message_parser_t(void *arg)
          ***************************************************************/
         uint8_t local_buffer_unstuffed[MMAP_SIZE];
         int local_buffer_unstuffed_size = 0;
-        gdl_90_byte_unstuff(local_buffer, local_buffer_size, local_buffer_unstuffed, &local_buffer_unstuffed_size);
+        gdl90_byte_unstuff(local_buffer, local_buffer_size, local_buffer_unstuffed, &local_buffer_unstuffed_size);
         printf("after byte stuffing\n");
         print_buffer(local_buffer_unstuffed, local_buffer_unstuffed_size);
 
@@ -163,15 +183,25 @@ void *message_parser_t(void *arg)
          ***************************************************************/
         // uint16_t crc16 = crc16_ccitt(local_buffer_unstuffed, local_buffer_unstuffed_size - 2); // This uses precompiled crc table
         unsigned int crc16 = crcCompute(local_buffer_unstuffed, local_buffer_unstuffed_size - 2);                                                                  // This is the example provided in GDL90 documentation
-        uint16_t message_crc16 = (uint16_t)local_buffer_unstuffed[local_buffer_unstuffed_size - 1] << 8 | local_buffer_unstuffed[local_buffer_unstuffed_size - 2]; // Little endian
+        uint16_t message_crc16 = (uint16_t)local_buffer_unstuffed[local_buffer_unstuffed_size - 1] << 8 | local_buffer_unstuffed[local_buffer_unstuffed_size - 2]; // The FCS is a 16-bit CRC with the least significant byte first.
         if (crc16 != message_crc16)
         {
             printf("crc mismatch!!\n [calculated crc: %d expected_crc=%d]\n", crc16, message_crc16);
+            fprintf(stderr, "crc mismatch!!\n [calculated crc: %d expected_crc=%d]\n", crc16, message_crc16);
+            // Reset the data_ready flag
+            shared_data->data_ready = 0;
+            pthread_mutex_unlock(&shared_data->mutex);
+            continue;
         }
 
-        gdl_parse_to_message(local_buffer_unstuffed, local_buffer_unstuffed_size - 2);
-        printf("testing after\n");
-        print_buffer(local_buffer, local_buffer_size);
+        /****************************************************************
+         *                                                              *
+         * 4. Parse byte_stream to message                              *
+         *                                                              *
+         ***************************************************************/
+        gdl90_parse_to_message(shared_data, local_buffer_unstuffed, local_buffer_unstuffed_size - 2);
+        // printf("testing after\n");
+        // print_buffer(local_buffer, local_buffer_size);
 
         // byte_stuffing_check - wherever a 0x7D or 0x7E byte is found in between the
         // two Flag Bytes, a Control-Escape character is inserted, followed by the original byte XOR’ed
@@ -263,10 +293,13 @@ void gdl_90_parse(uint8_t raw_byte, parser_status *status)
     // Here I should check if the message is ready, if so return it to the user
     if (shared_data->message_ready == 1)
     {
+        printf("Setting message ready (mesasge type %d)!\n", shared_data->message_type);
         status->status = MESSAGE_READY;
+        status->message_ready_type = shared_data->message_type;
     }
     else
     {
+        printf("parser still processing\n");
         status->status = PROCESSING;
     }
 }

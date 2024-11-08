@@ -1,7 +1,7 @@
 // crc16.h
 
-#ifndef _CRC16_H_
-#define _CRC16_H_
+#ifndef CRC16_H
+#define CRC16_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -17,6 +17,6 @@ void crcInit(void);
 /// @return CRC of the block
 uint16_t crcCompute(const uint8_t *buffer, size_t size);
 
-#endif // _CRC16_H_
+#endif // CRC16_H
 
 // EOF
