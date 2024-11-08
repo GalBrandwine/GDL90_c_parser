@@ -14,7 +14,7 @@ message("unity: ${unity_SOURCE_DIR}")
 message("unity build: ${unity_BINARY_DIR}")
 
 # include(unity)
-add_library(${PROJECT_NAME}_lib air_sample_task.c
+add_library(${PROJECT_NAME}_lib src/air_sample_task.c
     src/crc16.c)
 target_include_directories(${PROJECT_NAME}_lib PRIVATE
     include
