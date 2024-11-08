@@ -1,6 +1,6 @@
 #include "unity.h"
 #include "air_sample_task.h"
-
+#include <unistd.h>
 gdl90_heartbeat result_message;
 
 void setUp(void)
@@ -15,7 +15,7 @@ void tearDown(void)
     shut_down();
 }
 
-void test_gdl_90_parse_first_byte()
+void test_gdl90_parse_first_byte()
 {
     parser_status status = {0};
 
@@ -43,7 +43,7 @@ void heartbeat_callback(void *arg)
 }
 
 /// @brief 2.2.4. Message Example The byte sequence [0x7E 0x00 0x81 0x41 0xDB 0xD0 0x08 0x02 0xB3 0x8B 0x7E] represents a Heartbeat message including the Flags and the CRC value.
-void test_gdl_90_parse_message()
+void test_gdl90_parse_message()
 {
     parser_status status = {0};
     status.status = PROCESSING;
@@ -69,7 +69,7 @@ void test_gdl_90_parse_message()
 }
 
 /// @brief 2.2.4. Message Example The byte sequence [0x7E 0x00 0x81 0x41 0xDB 0xD0 0x08 0x02 0xB3 0x8B 0x7E] represents a Heartbeat message including the Flags and the CRC value.
-void test_gdl_90_parse_two_messages()
+void test_gdl90_parse_two_messages()
 {
     parser_status status = {0};
     status.status = PROCESSING;
@@ -112,7 +112,7 @@ void test_gdl_90_parse_two_messages()
     TEST_ASSERT_EQUAL(prev_message_count + 1, result_message.message_counts);
 }
 
-void test_gdl_90_parse_message_byte_stuffing()
+void test_gdl90_parse_message_byte_stuffing()
 {
     parser_status status = {0};
     status.status = PROCESSING;
@@ -149,9 +149,9 @@ void test_gdl_90_parse_message_byte_stuffing()
 int main(void)
 {
     UNITY_BEGIN();
-    RUN_TEST(test_gdl_90_parse_message_byte_stuffing);
-    RUN_TEST(test_gdl_90_parse_two_messages);
-    RUN_TEST(test_gdl_90_parse_message);
-    RUN_TEST(test_gdl_90_parse_first_byte);
+    RUN_TEST(test_gdl90_parse_message_byte_stuffing);
+    RUN_TEST(test_gdl90_parse_two_messages);
+    RUN_TEST(test_gdl90_parse_message);
+    RUN_TEST(test_gdl90_parse_first_byte);
     return UNITY_END();
 }

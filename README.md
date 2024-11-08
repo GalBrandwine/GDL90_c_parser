@@ -20,6 +20,14 @@ A GDL90 parser with extension to support SAE J1939 protocol
 
 ![ParserDesignHighLevel](doc/ParserDesignHighLevel.png "ParserDesignHighLevel")
 
+1. Using shared-memory-struct over shared-memory-map:
+   - Simplicity:  
+        Shared memory segments can be simpler to set up and use for basic IPC, especially for small, fixed-size data structures.
+   - Performance:  
+        Shared memory segments offer high performance with minimal overhead since the memory is directly accessible by all involved processes. There is no need for OS involvement once the memory is mapped.
+   - Low Latency:  
+        Shared memory segments provide low-latency communication, which is critical for real-time applications.
+
 ### Things I would like to do but have no time
 
 1. Change the buffer to cyclic buffer - this way I can always in-stream bytes, and out-parse them without interrupts
@@ -39,5 +47,5 @@ I used Ctest with _unity_ testing infrastructure, for portability - I fetch _uni
 # Run all tests
 ctest -j14 -C Debug -T test --output-on-failure
 # Run specific test
-ctest -j14 -C Debug -T test --output-on-failure -R ^test_gdl_90_parser
+ctest -j14 -C Debug -T test --output-on-failure -R ^test_gdl90_parser
 ```

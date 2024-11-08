@@ -148,7 +148,7 @@ void *message_parser_t(void *arg)
         uint8_t local_buffer[MMAP_SIZE];
         int local_buffer_size = 0;
         int local_buffer_index = 0;
-        for (size_t i = shared_data->flag_bytes_index; i <= shared_data->index; i++,local_buffer_index++)
+        for (size_t i = shared_data->flag_bytes_index; i <= shared_data->index; i++, local_buffer_index++)
         {
             printf("byte in buffer[%ld]=%x\n", i, shared_data->data[i + 1]);
             local_buffer[local_buffer_index] = shared_data->data[i + 1];
@@ -228,17 +228,13 @@ void shut_down()
     while (message_parser_still_running == 1)
     {
         printf("shutting down\n");
-        pthread_cond_signal(&shared_data->cond);
+        pthread_cond_signal(&shared_data.cond);
         sleep(1);
     }
 
     // Wait for the threads to finish
     printf("joining\n");
     pthread_join(thread_id, NULL);
-
-    // Clean up
-    munmap(shared_data, MMAP_SIZE);
-    unlink("mmapfile");
 }
 
 int init_parser()
@@ -246,59 +242,34 @@ int init_parser()
     crcInit();
     int fd;
 
-    // Create a file for memory mapping
-    fd = open("mmapfile", O_RDWR | O_CREAT | O_TRUNC, 0666);
-    if (fd == -1)
-    {
-        perror("open");
-        return EXIT_FAILURE;
-    }
-
-    // Set the file size
-    if (ftruncate(fd, MMAP_SIZE) == -1)
-    {
-        perror("ftruncate");
-        close(fd);
-        return EXIT_FAILURE;
-    }
-
-    // Map the file to memory
-    shared_data = (shared_data_t *)mmap(NULL, MMAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    if (shared_data == MAP_FAILED)
-    {
-        perror("mmap");
-        close(fd);
-        return EXIT_FAILURE;
-    }
-
     // Initialize the shared data structure
-    pthread_mutex_init(&shared_data->mutex, NULL);
-    pthread_cond_init(&shared_data->cond, NULL);
-    shared_data->data_ready = 0;
+    pthread_mutex_init(&shared_data.mutex, NULL);
+    pthread_cond_init(&shared_data.cond, NULL);
+    shared_data.data_ready = 0;
 
     // Close the file descriptor as it's no longer needed
-    close(fd);
+    // close(fd);
 
     // Create reader threads, and house keeping flags
     keep_running = 1;
     message_parser_still_running = 1;
-    pthread_create(&thread_id, NULL, message_parser_t, shared_data);
+    pthread_create(&thread_id, NULL, message_parser_t, &shared_data);
     return EXIT_SUCCESS;
 }
 
 void gdl90_parse(uint8_t raw_byte, parser_status *status)
 {
-    printf("started processing %x [index=%d]\n", raw_byte, shared_data->index);
+    printf("started processing %x [index=%d]\n", raw_byte, shared_data.index);
     if (raw_byte == 0x7E && status->status != PROCESSING)
     {
-        shared_data->flag_bytes_index = shared_data->index;
+        shared_data.flag_bytes_index = shared_data.index;
     }
 
     status->status = PROCESSING;
-    shared_data->data[shared_data->index++] = raw_byte;
-    shared_data->data_ready = 1;
-    shared_data->parser_status = status;
+    shared_data.data[shared_data.index++] = raw_byte;
+    shared_data.data_ready = 1;
+    shared_data.parser_status = status;
 
-    pthread_cond_signal(&shared_data->cond);
+    pthread_cond_signal(&shared_data.cond);
     printf("raw byte added to buffer\n");
 }

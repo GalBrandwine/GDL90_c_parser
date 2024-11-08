@@ -60,7 +60,7 @@ typedef struct
     parser_status *parser_status;
 } shared_data_t;
 
-static shared_data_t *shared_data;
+static shared_data_t shared_data;
 
 int init_parser();
 void shut_down();
