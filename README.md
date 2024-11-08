@@ -20,7 +20,12 @@ A GDL90 parser with extension to support SAE J1939 protocol
 
 ![ParserDesignHighLevel](doc/ParserDesignHighLevel.png "ParserDesignHighLevel")
 
-1. Using shared-memory-struct over shared-memory-map:
+1. Selecting buffer size of **2100 bytes**
+   Size of the memory-mapped region
+   Although GDL 90 has no limitation, I used the embedded SAE J1939 protocol as upper bound messages - 1785 Bytes + 100 Bytes for the mutexes ([SAE J1939 protocol](https://www.typhoon-hil.com/documentation/typhoon-hil-software-manual/References/j1939_protocol.html#:~:text=J1939%20defines%20the%20maximum%20message,sequence%208%20byte%20size%20messages.))
+2. Using the provided crc calculation from the GDL90 doc
+   I did that purely to stick with the protocol. There are others a bit more optimized in term of resource initialization.
+3. Using shared-memory-struct over shared-memory-map:
    - Simplicity:  
         Shared memory segments can be simpler to set up and use for basic IPC, especially for small, fixed-size data structures.
    - Performance:  

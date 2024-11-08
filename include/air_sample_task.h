@@ -33,7 +33,7 @@ typedef struct
 // Size of the memory-mapped region
 // Although GDL 90 has no limitation, I used the embedded SAE J1939 protocol as upper bound messages - 1785 Bytes (https://www.typhoon-hil.com/documentation/typhoon-hil-software-manual/References/j1939_protocol.html#:~:text=J1939%20defines%20the%20maximum%20message,sequence%208%20byte%20size%20messages.)
 // + 100 Bytes for the mutexes
-#define MMAP_SIZE 2100
+#define BUFFER_SIZE 2100
 
 /// @brief Helper function
 /// @param buffer
@@ -49,21 +49,28 @@ static void print_buffer(uint8_t *buffer, int buffer_size)
 }
 
 // Shared data structure
-typedef struct
+typedef struct shared_data_s
 {
     pthread_mutex_t mutex;
     pthread_cond_t cond;
-    uint8_t data[MMAP_SIZE - sizeof(pthread_mutex_t) - sizeof(pthread_cond_t)]; // Make sure we're not overflowing memory-mapped region
+    uint8_t data[BUFFER_SIZE - sizeof(pthread_mutex_t) - sizeof(pthread_cond_t)]; // Make sure we're not overflowing memory-mapped region
     int data_ready;
     int index;
     int flag_bytes_index;
     parser_status *parser_status;
-} shared_data_t;
+} shared_data_s;
 
-static shared_data_t shared_data;
+static shared_data_s shared_data;
 
+/// @brief The User must call this before starting parsing incoming bytes
+/// @return
 int init_parser();
 void shut_down();
+
+/// @brief The GDL90 parser
+/// An non-blocking bytes parser, that support callback attaching when message of interest has arrive completely
+/// @param raw_byte - the next byte to parse
+/// @param status - a context containing parsing statuses, and possible callback attached
 void gdl90_parse(uint8_t raw_byte, parser_status *status);
 
 #endif /*AIR_SAMPLE_TASK_H*/

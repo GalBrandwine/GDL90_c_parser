@@ -58,7 +58,7 @@ void gdl90_byte_unstuff(const uint8_t *input, size_t input_len, uint8_t *output,
     *output_len = out_idx;
 }
 
-void gdl90_parse_to_message(shared_data_t *shared_data, uint8_t *message_buffer, int message_size)
+void gdl90_parse_to_message(shared_data_s *shared_data, uint8_t *message_buffer, int message_size)
 {
     /*
     2.2.2. Message ID
@@ -103,7 +103,7 @@ void gdl90_parse_to_message(shared_data_t *shared_data, uint8_t *message_buffer,
 
 void *message_parser_t(void *arg)
 {
-    shared_data_t *shared_data = (shared_data_t *)arg;
+    shared_data_s *shared_data = (shared_data_s *)arg;
 
     while (keep_running)
     {
@@ -145,7 +145,7 @@ void *message_parser_t(void *arg)
          * 1. Strip beginning 0x7E and last 0x7E flags from the message *
          *                                                              *
          ***************************************************************/
-        uint8_t local_buffer[MMAP_SIZE];
+        uint8_t local_buffer[BUFFER_SIZE];
         int local_buffer_size = 0;
         int local_buffer_index = 0;
         for (size_t i = shared_data->flag_bytes_index; i <= shared_data->index; i++, local_buffer_index++)
@@ -177,7 +177,7 @@ void *message_parser_t(void *arg)
          * 2. Byte unstuffing                                           *
          *                                                              *
          ***************************************************************/
-        uint8_t local_buffer_unstuffed[MMAP_SIZE];
+        uint8_t local_buffer_unstuffed[BUFFER_SIZE];
         int local_buffer_unstuffed_size = 0;
         gdl90_byte_unstuff(local_buffer, local_buffer_size, local_buffer_unstuffed, &local_buffer_unstuffed_size);
         printf("after byte stuffing\n");
@@ -240,15 +240,11 @@ void shut_down()
 int init_parser()
 {
     crcInit();
-    int fd;
 
     // Initialize the shared data structure
     pthread_mutex_init(&shared_data.mutex, NULL);
     pthread_cond_init(&shared_data.cond, NULL);
     shared_data.data_ready = 0;
-
-    // Close the file descriptor as it's no longer needed
-    // close(fd);
 
     // Create reader threads, and house keeping flags
     keep_running = 1;

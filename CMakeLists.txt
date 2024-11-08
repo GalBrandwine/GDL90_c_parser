@@ -24,36 +24,36 @@ include(CTest)
 enable_testing()
 
 # Tests 1
-add_executable(test_gdl_90_parser
-    tests/test_gdl_90_parser.c
+add_executable(test_gdl90_parser
+    tests/test_gdl90_parser.c
 )
 
-target_include_directories(test_gdl_90_parser PRIVATE
+target_include_directories(test_gdl90_parser PRIVATE
     include
     src/
     ${unity_SOURCE_DIR}/src
 )
-target_link_libraries(test_gdl_90_parser
+target_link_libraries(test_gdl90_parser
     ${PROJECT_NAME}_lib
     ${unity_BINARY_DIR}/libunity.a
 )
 
-# Run all tests - ctest -j14 -C Debug -T test --output-on-failure
-# ctest -j14 -C Debug -T test --output-on-failure -R ^test_gdl_90_parser
-add_test(test_gdl_90_parser test_gdl_90_parser)
+# Run all tests     - ctest -j14 -C Debug -T test --output-on-failure
+# Run specific test - ctest -j14 -C Debug -T test --output-on-failure -R ^test_gdl90_parser
+add_test(test_gdl90_parser test_gdl90_parser)
 
 # Tests 2
-add_executable(test_gdl_90_parser_heartbeat_message
-    tests/test_gdl_90_parser_heartbeat_message.c
+add_executable(test_gdl90_parser_heartbeat_message
+    tests/test_gdl90_parser_heartbeat_message.c
 )
 
-target_include_directories(test_gdl_90_parser_heartbeat_message PRIVATE
+target_include_directories(test_gdl90_parser_heartbeat_message PRIVATE
     include
     src/
     ${unity_SOURCE_DIR}/src
 )
-target_link_libraries(test_gdl_90_parser_heartbeat_message
+target_link_libraries(test_gdl90_parser_heartbeat_message
     ${PROJECT_NAME}_lib
     ${unity_BINARY_DIR}/libunity.a
 )
-add_test(test_gdl_90_parser_heartbeat_message test_gdl_90_parser_heartbeat_message)
+add_test(test_gdl90_parser_heartbeat_message test_gdl90_parser_heartbeat_message)
