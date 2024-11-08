@@ -161,9 +161,14 @@ void *message_parser_t(void *arg)
          * 3. Calculate CRC                                             *
          *                                                              *
          ***************************************************************/
-        // uint16_t crc16 = crc16_ccitt(local_buffer_unstuffed, local_buffer_unstuffed_size - 2);
-        unsigned int crc16 = crcCompute(local_buffer_unstuffed, local_buffer_unstuffed_size - 2);
-        printf("got crc: %d\n", crc16);
+        // uint16_t crc16 = crc16_ccitt(local_buffer_unstuffed, local_buffer_unstuffed_size - 2); // This uses precompiled crc table
+        unsigned int crc16 = crcCompute(local_buffer_unstuffed, local_buffer_unstuffed_size - 2);                                                                  // This is the example provided in GDL90 documentation
+        uint16_t message_crc16 = (uint16_t)local_buffer_unstuffed[local_buffer_unstuffed_size - 1] << 8 | local_buffer_unstuffed[local_buffer_unstuffed_size - 2]; // Little endian
+        if (crc16 != message_crc16)
+        {
+            printf("crc mismatch!!\n [calculated crc: %d expected_crc=%d]\n", crc16, message_crc16);
+        }
+
         gdl_parse_to_message(local_buffer_unstuffed, local_buffer_unstuffed_size - 2);
         printf("testing after\n");
         print_buffer(local_buffer, local_buffer_size);
