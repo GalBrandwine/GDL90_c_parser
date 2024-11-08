@@ -119,8 +119,8 @@ void *message_parser_t(void *arg)
         }
 
         // Read the data
-
-        uint8_t flag = shared_data->data[0]; // We expect 0x7e at the head of the buffer
+        printf("flag_bytes_index=%d index=%d\n", shared_data->flag_bytes_index, shared_data->index);
+        uint8_t flag = shared_data->data[shared_data->flag_bytes_index]; // We expect 0x7e at the head of the buffer
         if (flag != 0x7e)
         {
             printf("not synchronized, dropping packets\n"); // for simplicity. Eventually I would like to resync the parser with the stream
@@ -129,7 +129,7 @@ void *message_parser_t(void *arg)
             pthread_mutex_unlock(&shared_data->mutex);
             continue;
         }
-        int start_message_index = 1;
+
         printf("Reader thread received: %x\n", flag);
 
         if (shared_data->index <= 1)
@@ -147,14 +147,15 @@ void *message_parser_t(void *arg)
          ***************************************************************/
         uint8_t local_buffer[MMAP_SIZE];
         int local_buffer_size = 0;
-        for (size_t i = 0; i <= shared_data->index; i++)
+        int local_buffer_index = 0;
+        for (size_t i = shared_data->flag_bytes_index; i <= shared_data->index; i++,local_buffer_index++)
         {
-            printf("byte in buffer[%ld]=%x\n", i, shared_data->data[start_message_index + i]);
-            local_buffer[i] = shared_data->data[start_message_index + i];
-            if (shared_data->data[start_message_index + i] == 0x7e)
+            printf("byte in buffer[%ld]=%x\n", i, shared_data->data[i + 1]);
+            local_buffer[local_buffer_index] = shared_data->data[i + 1];
+            if (shared_data->data[i + 1] == 0x7e)
             {
                 printf("got Control-Escape flag\n");
-                local_buffer_size = i;
+                local_buffer_size = local_buffer_index;
                 break;
             }
         }
@@ -211,6 +212,8 @@ void *message_parser_t(void *arg)
         // Reset the data_ready flag
         shared_data->data_ready = 0;
 
+        // Resetting flag_bytes_index
+        shared_data->flag_bytes_index = shared_data->index;
         // Unlock the mutex
         pthread_mutex_unlock(&shared_data->mutex);
         usleep(500);
@@ -285,7 +288,12 @@ int init_parser()
 
 void gdl90_parse(uint8_t raw_byte, parser_status *status)
 {
-    printf("started processing %x\n", raw_byte);
+    printf("started processing %x [index=%d]\n", raw_byte, shared_data->index);
+    if (raw_byte == 0x7E && status->status != PROCESSING)
+    {
+        shared_data->flag_bytes_index = shared_data->index;
+    }
+
     status->status = PROCESSING;
     shared_data->data[shared_data->index++] = raw_byte;
     shared_data->data_ready = 1;

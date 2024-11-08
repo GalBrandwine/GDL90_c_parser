@@ -68,6 +68,50 @@ void test_gdl_90_parse_message()
     TEST_ASSERT_EQUAL(status.status, MESSAGE_READY);
 }
 
+/// @brief 2.2.4. Message Example The byte sequence [0x7E 0x00 0x81 0x41 0xDB 0xD0 0x08 0x02 0xB3 0x8B 0x7E] represents a Heartbeat message including the Flags and the CRC value.
+void test_gdl_90_parse_two_messages()
+{
+    parser_status status = {0};
+    status.status = PROCESSING;
+
+    // Store callbackMap in status
+    status.callbackMap[HEARTBEAT] = heartbeat_callback;
+
+    int raw_message_size = 11;
+    uint8_t raw_message[11] = {0x7E, 0x00, 0x81, 0x41, 0xDB, 0xD0, 0x08, 0x02, 0xB3, 0x8B, 0x7E};
+
+    // Simulate bytes incoming from GDL90 uart connection
+    for (size_t i = 0; i < raw_message_size; i++)
+    {
+        gdl90_parse(raw_message[i], &status);
+        usleep(100);
+    }
+
+    while (status.status == PROCESSING)
+    {
+        usleep(100);
+    }
+    TEST_ASSERT_EQUAL(status.status, MESSAGE_READY);
+    int prev_message_count = result_message.message_counts;
+
+    printf("\n\n Starting second part of the test\n\n");
+
+    uint8_t raw_message_2[11] = {0x7E, 0x00, 0x81, 0x41, 0xDB, 0xD0, 0x09, 0x02, 0xB3, 0x8A, 0x7E}; // Updated the message_counter
+    // Simulate bytes incoming from GDL90 uart connection
+    for (size_t i = 0; i < raw_message_size; i++)
+    {
+        gdl90_parse(raw_message_2[i], &status);
+        usleep(100);
+    }
+
+    while (status.status == PROCESSING)
+    {
+        usleep(100);
+    }
+    TEST_ASSERT_EQUAL(status.status, MESSAGE_READY);
+    TEST_ASSERT_EQUAL(prev_message_count + 1, result_message.message_counts);
+}
+
 void test_gdl_90_parse_message_byte_stuffing()
 {
     parser_status status = {0};
@@ -106,6 +150,7 @@ int main(void)
 {
     UNITY_BEGIN();
     RUN_TEST(test_gdl_90_parse_message_byte_stuffing);
+    RUN_TEST(test_gdl_90_parse_two_messages);
     RUN_TEST(test_gdl_90_parse_message);
     RUN_TEST(test_gdl_90_parse_first_byte);
     return UNITY_END();

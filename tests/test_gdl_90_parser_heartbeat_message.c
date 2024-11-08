@@ -18,7 +18,7 @@ void test_gdl_90_parser_heartbeat_message_sanity_check()
     uint8_t raw_heartbeat_message[7] = {0x01, 0x81, 0x41, 0xDB, 0xD0, 0x08, 0x02};
 
     gdl90_heartbeat hb_message = parse_heartbeat_message(raw_heartbeat_message, 0);
-    TEST_ASSERT_EQUAL(HEARTBEAT_MESSAGE_ID, hb_message.id);
+    TEST_ASSERT_EQUAL(UNKNOWN_MESSAGE, hb_message.id);
 }
 /// @brief 2.2.4. Message Example The byte sequence [0x7E 0x00 0x81 0x41 0xDB 0xD0 0x08 0x02 0xB3 0x8B 0x7E] represents a Heartbeat message including the Flags and the CRC value.
 void test_gdl_90_parser_heartbeat_message()

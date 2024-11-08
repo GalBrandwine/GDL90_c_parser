@@ -56,7 +56,7 @@ typedef struct
     uint8_t data[MMAP_SIZE - sizeof(pthread_mutex_t) - sizeof(pthread_cond_t)]; // Make sure we're not overflowing memory-mapped region
     int data_ready;
     int index;
-    // message_ready_callback callbackMap[MESSAGE_COUNT];
+    int flag_bytes_index;
     parser_status *parser_status;
 } shared_data_t;
 
