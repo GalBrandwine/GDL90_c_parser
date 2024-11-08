@@ -1,6 +1,7 @@
 #ifndef GDL90_HEARTBEAT_H
 #define GDL90_HEARTBEAT_H
 #include "common.h"
+
 typedef struct byte1_bits
 {
     // Byte 1 (Status Byte 1)
@@ -43,11 +44,37 @@ typedef struct gdl90_heartbeat
     uint16_t message_counts;
 } gdl90_heartbeat;
 
+static void print_heartbeat_message(gdl90_heartbeat *hb_message)
+{
+    printf("hb_message.timestamp                            =  %d[10]\n", hb_message->timestamp);
+    printf("hb_message.status.status_byte1                  =  %b\n", hb_message->status.byte1); // %b not supported in POSIX, I know - It wont go to production this way, I promise
+    printf("hb_message.status.status_byte2                  =  %b\n", hb_message->status.byte2);
+    printf("hb_message.status.status_byte1.gps_pos_valid    =  %d\n", hb_message->status.byte1.gps_pos_valid);
+    printf("hb_message.status.status_byte1.maint_req        =  %d\n", hb_message->status.byte1.maint_req);
+    printf("hb_message.status.status_byte1.ident            =  %d\n", hb_message->status.byte1.ident);
+    printf("hb_message.status.status_byte1.addr_type        =  %d\n", hb_message->status.byte1.addr_type);
+    printf("hb_message.status.status_byte1.gps_batt_low     =  %d\n", hb_message->status.byte1.gps_batt_low);
+    printf("hb_message.status.status_byte1.ratcs            =  %d\n", hb_message->status.byte1.ratcs);
+    printf("hb_message.status.status_byte1.reserved5        =  %d\n", hb_message->status.byte1.reserved5);
+    printf("hb_message.status.status_byte1.uat_initialized  =  %d\n", hb_message->status.byte1.uat_initialized);
+    printf("hb_message.status.status_byte2.timestamp        =  %d\n", hb_message->status.byte2.timestamp);
+    printf("hb_message.status.status_byte2.csa_requested    =  %d\n", hb_message->status.byte2.csa_requested);
+    printf("hb_message.status.status_byte2.csa_not_available=  %d\n", hb_message->status.byte2.csa_not_available);
+    printf("hb_message.status.status_byte2.reserved4        =  %d\n", hb_message->status.byte2.reserved4);
+    printf("hb_message.status.status_byte2.reserved3        =  %d\n", hb_message->status.byte2.reserved3);
+    printf("hb_message.status.status_byte2.reserved2        =  %d\n", hb_message->status.byte2.reserved2);
+    printf("hb_message.status.status_byte2.reserved1        =  %d\n", hb_message->status.byte2.reserved1);
+    printf("hb_message.status.status_byte2.utc_ok           =  %d\n", hb_message->status.byte2.utc_ok);
+    printf("hb_message.status.raw                           =  %b\n", hb_message->status.raw);
+    printf("hb_message.status.raw                           =  %x[16]\n", hb_message->status.raw);
+    printf("hb_message.message_counts                       =  %d[10]\n", hb_message->message_counts);
+}
+
 /// @brief parse from buffer a heartbeat_message, this will always work if ID is 0
 /// @param buffer
 /// @param verbose
 /// @return gdl90_heartbeat
-gdl90_heartbeat parse_heartbeat_message(uint8_t *buffer, int verbose)
+static gdl90_heartbeat parse_heartbeat_message(uint8_t *buffer, int verbose)
 {
     gdl90_heartbeat hb_message = {0};
     hb_message.id = buffer[0];
@@ -65,30 +92,10 @@ gdl90_heartbeat parse_heartbeat_message(uint8_t *buffer, int verbose)
     hb_message.message_counts = ((uint16_t)buffer[6] << 8) | buffer[5];
     if (verbose == 1)
     {
-        printf("hb_message.timestamp                            =  %d[10]\n", hb_message.timestamp);
-        printf("hb_message.status.status_byte1                  =  %b\n", hb_message.status.byte1); // %b not supported in POSIX, I know - It wont go to production this way, I promise
-        printf("hb_message.status.status_byte2                  =  %b\n", hb_message.status.byte2);
-        printf("hb_message.status.status_byte1.gps_pos_valid    =  %d\n", hb_message.status.byte1.gps_pos_valid);
-        printf("hb_message.status.status_byte1.maint_req        =  %d\n", hb_message.status.byte1.maint_req);
-        printf("hb_message.status.status_byte1.ident            =  %d\n", hb_message.status.byte1.ident);
-        printf("hb_message.status.status_byte1.addr_type        =  %d\n", hb_message.status.byte1.addr_type);
-        printf("hb_message.status.status_byte1.gps_batt_low     =  %d\n", hb_message.status.byte1.gps_batt_low);
-        printf("hb_message.status.status_byte1.ratcs            =  %d\n", hb_message.status.byte1.ratcs);
-        printf("hb_message.status.status_byte1.reserved5        =  %d\n", hb_message.status.byte1.reserved5);
-        printf("hb_message.status.status_byte1.uat_initialized  =  %d\n", hb_message.status.byte1.uat_initialized);
-        printf("hb_message.status.status_byte2.timestamp        =  %d\n", hb_message.status.byte2.timestamp);
-        printf("hb_message.status.status_byte2.csa_requested    =  %d\n", hb_message.status.byte2.csa_requested);
-        printf("hb_message.status.status_byte2.csa_not_available=  %d\n", hb_message.status.byte2.csa_not_available);
-        printf("hb_message.status.status_byte2.reserved4        =  %d\n", hb_message.status.byte2.reserved4);
-        printf("hb_message.status.status_byte2.reserved3        =  %d\n", hb_message.status.byte2.reserved3);
-        printf("hb_message.status.status_byte2.reserved2        =  %d\n", hb_message.status.byte2.reserved2);
-        printf("hb_message.status.status_byte2.reserved1        =  %d\n", hb_message.status.byte2.reserved1);
-        printf("hb_message.status.status_byte2.utc_ok           =  %d\n", hb_message.status.byte2.utc_ok);
-        printf("hb_message.status.raw                           =  %b\n", hb_message.status.raw);
-        printf("hb_message.status.raw                           =  %x[16]\n", hb_message.status.raw);
-        printf("hb_message.message_counts                       =  %d[10]\n", hb_message.message_counts);
+        print_heartbeat_message(&hb_message);
     }
 
     return hb_message;
 }
+
 #endif /*GDL90_HEARTBEAT_H*/

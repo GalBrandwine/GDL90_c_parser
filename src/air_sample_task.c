@@ -21,6 +21,7 @@ void gdl90_byte_unstuff(const uint8_t *input, size_t input_len, uint8_t *output,
     {
         if (input[i] == 0x7D)
         {
+            printf("found byte stuffing [i=%d]\n", i);
             i++;
             if (i < input_len)
             {
@@ -73,16 +74,24 @@ void gdl90_parse_to_message(shared_data_t *shared_data, uint8_t *message_buffer,
     {
     case HEARTBEAT:
         printf("Got a heart bit message - processing...\n");
+        shared_data->parser_status->message_ready_type = HEARTBEAT;
         gdl90_heartbeat hb_message = parse_heartbeat_message(message_buffer, 0);
         if (hb_message.id == UNKNOWN_MESSAGE)
         {
             printf("Failed parsing HEARTBEAT message!\n");
+            shared_data->parser_status->status = FAILED;
         }
         else
         {
-            shared_data->message_ready = 1;
-            shared_data->message_type = HEARTBEAT;
-            // memcpy(shared_data->data, &hb_message, sizeof(gdl90_heartbeat));
+            if (shared_data->parser_status->callbackMap[HEARTBEAT])
+            {
+                shared_data->parser_status->status = MESSAGE_READY;
+                shared_data->parser_status->callbackMap[HEARTBEAT]((void *)&hb_message);
+            }
+            else
+            {
+                printf("No user attached to this kinda message\n");
+            }
         }
 
         break;
@@ -95,8 +104,6 @@ void gdl90_parse_to_message(shared_data_t *shared_data, uint8_t *message_buffer,
 void *message_parser_t(void *arg)
 {
     shared_data_t *shared_data = (shared_data_t *)arg;
-    // uint8_t local_buffer[MMAP_SIZE];
-    // int local_buffer_size = 0;
 
     while (keep_running)
     {
@@ -109,7 +116,6 @@ void *message_parser_t(void *arg)
             pthread_cond_wait(&shared_data->cond, &shared_data->mutex);
             if (!keep_running)
                 break;
-            // usleep(500);
         }
 
         // Read the data
@@ -190,6 +196,7 @@ void *message_parser_t(void *arg)
             fprintf(stderr, "crc mismatch!!\n [calculated crc: %d expected_crc=%d]\n", crc16, message_crc16);
             // Reset the data_ready flag
             shared_data->data_ready = 0;
+            shared_data->parser_status->status = FAILED;
             pthread_mutex_unlock(&shared_data->mutex);
             continue;
         }
@@ -200,12 +207,6 @@ void *message_parser_t(void *arg)
          *                                                              *
          ***************************************************************/
         gdl90_parse_to_message(shared_data, local_buffer_unstuffed, local_buffer_unstuffed_size - 2);
-        // printf("testing after\n");
-        // print_buffer(local_buffer, local_buffer_size);
-
-        // byte_stuffing_check - wherever a 0x7D or 0x7E byte is found in between the
-        // two Flag Bytes, a Control-Escape character is inserted, followed by the original byte XOR’ed
-        // with the value 0x20
 
         // Reset the data_ready flag
         shared_data->data_ready = 0;
@@ -240,7 +241,6 @@ void shut_down()
 int init_parser()
 {
     crcInit();
-
     int fd;
 
     // Create a file for memory mapping
@@ -276,30 +276,21 @@ int init_parser()
     // Close the file descriptor as it's no longer needed
     close(fd);
 
-    // Create reader threads
+    // Create reader threads, and house keeping flags
+    keep_running = 1;
+    message_parser_still_running = 1;
     pthread_create(&thread_id, NULL, message_parser_t, shared_data);
     return EXIT_SUCCESS;
 }
 
-void gdl_90_parse(uint8_t raw_byte, parser_status *status)
+void gdl90_parse(uint8_t raw_byte, parser_status *status)
 {
     printf("started processing %x\n", raw_byte);
+    status->status = PROCESSING;
     shared_data->data[shared_data->index++] = raw_byte;
     shared_data->data_ready = 1;
+    shared_data->parser_status = status;
 
     pthread_cond_signal(&shared_data->cond);
     printf("raw byte added to buffer\n");
-
-    // Here I should check if the message is ready, if so return it to the user
-    if (shared_data->message_ready == 1)
-    {
-        printf("Setting message ready (mesasge type %d)!\n", shared_data->message_type);
-        status->status = MESSAGE_READY;
-        status->message_ready_type = shared_data->message_type;
-    }
-    else
-    {
-        printf("parser still processing\n");
-        status->status = PROCESSING;
-    }
 }

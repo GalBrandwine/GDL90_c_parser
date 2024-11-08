@@ -20,6 +20,10 @@ A GDL90 parser with extension to support SAE J1939 protocol
 
 ![ParserDesignHighLevel](doc/ParserDesignHighLevel.png "ParserDesignHighLevel")
 
+### Things I would like to do but have no time
+
+1. Change the buffer to cyclic buffer - this way I can always in-stream bytes, and out-parse them without interrupts
+
 ## Compile
 
 ```shell

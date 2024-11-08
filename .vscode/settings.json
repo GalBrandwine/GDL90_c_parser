@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "*.cpp": "cpp",
+        "*.hpp": "cpp",
+        "gdl90_heartbeat.h": "c",
+        "air_sample_task.h": "c",
+        "types.h": "c",
+        "common.h": "c"
+    }
+}

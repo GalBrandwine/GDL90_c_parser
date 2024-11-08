@@ -13,9 +13,9 @@ FetchContent_MakeAvailable(unity)
 message("unity: ${unity_SOURCE_DIR}")
 message("unity build: ${unity_BINARY_DIR}")
 
-# include(unity)
 add_library(${PROJECT_NAME}_lib src/air_sample_task.c
     src/crc16.c)
+
 target_include_directories(${PROJECT_NAME}_lib PRIVATE
     include
     src/)
@@ -30,6 +30,7 @@ add_executable(test_gdl_90_parser
 
 target_include_directories(test_gdl_90_parser PRIVATE
     include
+    src/
     ${unity_SOURCE_DIR}/src
 )
 target_link_libraries(test_gdl_90_parser
