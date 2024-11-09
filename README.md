@@ -16,6 +16,15 @@ A GDL90 parser with extension to support SAE J1939 protocol
 
 * This parser doesn't support Q notation
 
+## Running the main example
+
+This parser is a dynamic library.
+I've provided a main example to show how to use this parser
+
+```shell
+mkdir build && cd build
+cmake .. && make -j $(nproc)
+./main
 ## Questions
 
 1. According to GDL90 documentation - it allows maximum 3.8 [KB/s], embedding within GDL90 a SAE J1939 protocol (that allows 500 Kb/s) will cause a bottle neck tho the underlined protocol. Why have you choose this implementation?
@@ -62,6 +71,8 @@ cmake .. && make -j $(nproc)
 * I used Ctest with _unity_ testing infrastructure, for portability (I fetch _unity_ it at Cmake time, it happens once, but requires internet connection)
 
 ```shell
+# For building with unittest
+cmake .. -D build_test=true && make -j $(nproc)  # Might need to run twice
 # Run all tests
 ctest -j14 -C Debug -T test --output-on-failure
 # Run specific test

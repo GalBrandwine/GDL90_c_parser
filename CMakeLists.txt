@@ -1,18 +1,6 @@
 cmake_minimum_required(VERSION 3.5.0)
 project(air_sample_task VERSION 0.1.0 LANGUAGES C)
 
-include(FetchContent)
-message("Fetching content: Unity")
-FetchContent_Declare(
-    unity
-    GIT_REPOSITORY https://github.com/ThrowTheSwitch/Unity # https://github.com/google/googletest.git
-    GIT_TAG master # origin/main
-)
-
-FetchContent_MakeAvailable(unity)
-message("unity: ${unity_SOURCE_DIR}")
-message("unity build: ${unity_BINARY_DIR}")
-
 add_library(${PROJECT_NAME}_lib src/air_sample_task.c
     src/crc16.c)
 
@@ -38,6 +26,20 @@ target_link_libraries(main ${PROJECT_NAME}_lib)
 #   Create unittests                                                #
 #                                                                   #
 #####################################################################
+
+IF( DEFINED build_test )
+
+include(FetchContent)
+message("Fetching content: Unity")
+FetchContent_Declare(
+    unity
+    GIT_REPOSITORY https://github.com/ThrowTheSwitch/Unity # https://github.com/google/googletest.git
+    GIT_TAG master # origin/main
+)
+
+FetchContent_MakeAvailable(unity)
+message("unity: ${unity_SOURCE_DIR}")
+message("unity build: ${unity_BINARY_DIR}")
 
 include(CTest)
 enable_testing()
@@ -95,3 +97,4 @@ target_link_libraries(test_gdl90_parser_air_extension_message
     ${unity_BINARY_DIR}/libunity.a
 )
 add_test(test_gdl90_parser_air_extension_message test_gdl90_parser_air_extension_message)
+ENDIF( DEFINED build_test )
