@@ -2,7 +2,19 @@
 
 A GDL90 parser with extension to support SAE J1939 protocol
 
-**TDD approach** - Since I had no idea what these two protocols are, I used excessive unittesting on the way
+**TDD approach** - Since I had no idea what these two protocols are, I used excessive unittest on the way
+
+## What is implemented
+
+* non-blocking GDL 90 parser written in C
+  * This parser supports the following messages:
+    * HeartBeat message
+    * AIR GDL90 protocol extension messages
+  * This parser has no memory allocation - everything runs on the stack (see [design](#design))
+
+## What is not implemented
+
+* This parser doesn't support Q notation
 
 ## Questions
 
@@ -16,7 +28,7 @@ A GDL90 parser with extension to support SAE J1939 protocol
     received UAT messages are filtered by range from ownship
     ```
 
-## Design
+## <a id="design"></a>Design
 
 ![ParserDesignHighLevel](doc/ParserDesignHighLevel.png "ParserDesignHighLevel")
 
@@ -46,7 +58,8 @@ cmake .. && make -j $(nproc)
 
 ## Run tests
 
-I used Ctest with _unity_ testing infrastructure, for portability - I fetch _unity_ it at Cmake time (it happens once, but requires internet connection)
+* This task was implementer on linux machine
+* I used Ctest with _unity_ testing infrastructure, for portability (I fetch _unity_ it at Cmake time, it happens once, but requires internet connection)
 
 ```shell
 # Run all tests

@@ -49,7 +49,7 @@ void test_gdl90_parse_message()
     status.status = PROCESSING;
 
     // Store callbackMap in status
-    status.callbackMap[HEARTBEAT] = heartbeat_callback;
+    status.callbackMap[HEARTBEAT_MESSAGE_ID] = heartbeat_callback;
 
     int raw_message_size = 11;
     uint8_t raw_message[11] = {0x7E, 0x00, 0x81, 0x41, 0xDB, 0xD0, 0x08, 0x02, 0xB3, 0x8B, 0x7E};
@@ -75,7 +75,7 @@ void test_gdl90_parse_two_messages()
     status.status = PROCESSING;
 
     // Store callbackMap in status
-    status.callbackMap[HEARTBEAT] = heartbeat_callback;
+    status.callbackMap[HEARTBEAT_MESSAGE_ID] = heartbeat_callback;
 
     int raw_message_size = 11;
     uint8_t raw_message[11] = {0x7E, 0x00, 0x81, 0x41, 0xDB, 0xD0, 0x08, 0x02, 0xB3, 0x8B, 0x7E};
@@ -118,7 +118,7 @@ void test_gdl90_parse_message_byte_stuffing()
     status.status = PROCESSING;
 
     // Store callbackMap in status
-    status.callbackMap[HEARTBEAT] = heartbeat_callback;
+    status.callbackMap[HEARTBEAT_MESSAGE_ID] = heartbeat_callback;
 
     int raw_message_size = 12;
     //                                                                  Control

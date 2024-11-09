@@ -1,5 +1,4 @@
 #include "air_sample_task.h"
-#include "gdl90_heartbeat.h"
 #include <sys/mman.h>
 #include <pthread.h>
 #include <unistd.h>
@@ -72,9 +71,9 @@ void gdl90_parse_to_message(shared_data_s *shared_data, uint8_t *message_buffer,
     uint8_t id = message_buffer[0];
     switch (id)
     {
-    case HEARTBEAT:
+    case HEARTBEAT_MESSAGE_ID:
         printf("Got a heart bit message - processing...\n");
-        shared_data->parser_status->message_ready_type = HEARTBEAT;
+        shared_data->parser_status->message_ready_type = HEARTBEAT_MESSAGE_ID;
         gdl90_heartbeat hb_message = parse_heartbeat_message(message_buffer, 0);
         if (hb_message.id == UNKNOWN_MESSAGE)
         {
@@ -83,10 +82,10 @@ void gdl90_parse_to_message(shared_data_s *shared_data, uint8_t *message_buffer,
         }
         else
         {
-            if (shared_data->parser_status->callbackMap[HEARTBEAT])
+            if (shared_data->parser_status->callbackMap[HEARTBEAT_MESSAGE_ID])
             {
                 shared_data->parser_status->status = MESSAGE_READY;
-                shared_data->parser_status->callbackMap[HEARTBEAT]((void *)&hb_message);
+                shared_data->parser_status->callbackMap[HEARTBEAT_MESSAGE_ID]((void *)&hb_message);
             }
             else
             {
@@ -95,7 +94,12 @@ void gdl90_parse_to_message(shared_data_s *shared_data, uint8_t *message_buffer,
         }
 
         break;
-
+    case GDL90_AIR_EXTENSION:
+    case GDL90_AIR_EXTENSION_1:
+        printf("Got a AIR EXTENTION MENAGE - processing...\n");
+        shared_data->parser_status->message_ready_type = id;
+        parse_gdl90_air_extension_message(message_buffer, shared_data->parser_status, 0);
+        break;
     default:
         break;
     }
@@ -207,14 +211,13 @@ void *message_parser_t(void *arg)
          * 4. Parse byte_stream to message                              *
          *                                                              *
          ***************************************************************/
-        gdl90_parse_to_message(shared_data, local_buffer_unstuffed, local_buffer_unstuffed_size - 2);
+        gdl90_parse_to_message(shared_data, local_buffer_unstuffed, local_buffer_unstuffed_size - 2); // minus 2 bytes -  CRC
 
         // Reset the data_ready flag
         shared_data->data_ready = 0;
 
         // Resetting flag_bytes_index
         shared_data->flag_bytes_index = shared_data->index;
-        // Unlock the mutex
         pthread_mutex_unlock(&shared_data->mutex);
         usleep(500);
     }
@@ -227,7 +230,7 @@ void shut_down()
     keep_running = 0;
     while (message_parser_still_running == 1)
     {
-        printf("shutting down\n");
+        printf("still shutting down\n");
         pthread_cond_signal(&shared_data.cond);
         sleep(1);
     }
