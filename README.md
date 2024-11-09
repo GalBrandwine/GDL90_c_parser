@@ -25,6 +25,8 @@ I've provided a main example to show how to use this parser
 mkdir build && cd build
 cmake .. && make -j $(nproc)
 ./main
+```
+
 ## Questions
 
 1. According to GDL90 documentation - it allows maximum 3.8 [KB/s], embedding within GDL90 a SAE J1939 protocol (that allows 500 Kb/s) will cause a bottle neck tho the underlined protocol. Why have you choose this implementation?
